@@ -1,0 +1,1 @@
+echo 'laravel scaffold placeholder'

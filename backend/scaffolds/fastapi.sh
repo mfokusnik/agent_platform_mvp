@@ -1,0 +1,1 @@
+echo 'fastapi scaffold placeholder'

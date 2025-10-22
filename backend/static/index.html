@@ -1,0 +1,225 @@
+<!doctype html>
+<html lang="ru" class="tw-h-full">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Агент‑студия v5</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+</head>
+<body class="tw-h-full tw-bg-slate-50 tw-text-slate-900">
+  <div class="tw-max-w-7xl tw-mx-auto tw-p-6 tw-space-y-6">
+    <header class="tw-flex tw-items-center tw-justify-between">
+      <h1 class="tw-text-2xl tw-font-semibold">Агент‑студия <span class="tw-text-slate-500">v5</span></h1>
+      <div id="status" class="tw-text-sm tw-rounded-full tw-bg-slate-200 tw-px-3 tw-py-1">idle</div>
+    </header>
+
+    <!-- Панель создания проекта -->
+    <section class="tw-bg-white tw-rounded-2xl tw-shadow-sm tw-p-5">
+      <h2 class="tw-font-medium tw-mb-3">1) Создайте проект</h2>
+      <div class="tw-grid md:tw-grid-cols-4 tw-gap-3">
+        <input id="pname" class="tw-border tw-rounded-xl tw-px-3 tw-py-2" placeholder="Название проекта"/>
+        <input id="pdesc" class="tw-border tw-rounded-xl tw-px-3 tw-py-2" placeholder="Короткое описание понятным языком"/>
+        <input id="pstack" class="tw-border tw-rounded-xl tw-px-3 tw-py-2" placeholder="Стек: python/laravel/react..."/>
+        <input id="prepo" class="tw-border tw-rounded-xl tw-px-3 tw-py-2" placeholder="GitHub (необязательно)"/>
+      </div>
+      <div class="tw-flex tw-gap-3 tw-mt-3">
+        <button onclick="createProject()" class="tw-bg-black tw-text-white tw-rounded-xl tw-px-4 tw-py-2 tw-font-medium">Создать</button>
+        <div class="tw-text-xs tw-text-slate-500">ID проекта: <span id="pid"></span></div>
+      </div>
+    </section>
+
+    <!-- Вкладки -->
+    <section class="tw-bg-white tw-rounded-2xl tw-shadow-sm tw-p-5">
+      <div class="tw-flex tw-gap-6 tw-border-b tw-mb-4">
+        <button class="tab tw-border-b-2 tw-border-transparent tw-py-2 tw-text-slate-600" data-tab="chat">Чат</button>
+        <button class="tab tw-border-b-2 tw-border-transparent tw-py-2 tw-text-slate-600" data-tab="tasks">Задачи</button>
+        <button class="tab tw-border-b-2 tw-border-transparent tw-py-2 tw-text-slate-600" data-tab="logs">Логи</button>
+        <button class="tab tw-border-b-2 tw-border-transparent tw-py-2 tw-text-slate-600" data-tab="schedule">Расписание</button>
+      </div>
+
+      <!-- Чат -->
+      <div id="tab-chat" class="tab-panel">
+        <div class="tw-grid md:tw-grid-cols-3 tw-gap-6">
+          <div class="md:tw-col-span-2">
+            <div id="chat-box" class="tw-font-sans tw-text-sm tw-border tw-rounded-xl tw-bg-slate-50 tw-h-80 tw-overflow-auto tw-p-3 tw-mb-3"></div>
+            <div class="tw-flex tw-gap-2">
+              <input id="chat-input" class="tw-flex-1 tw-border tw-rounded-xl tw-px-3 tw-py-2" placeholder="Напишите вопрос или задачу простым языком"/>
+              <button onclick="sendChat()" class="tw-bg-indigo-600 tw-text-white tw-rounded-xl tw-px-4 tw-py-2">Отправить</button>
+              <button onclick="sendAsTask()" class="tw-bg-emerald-600 tw-text-white tw-rounded-xl tw-px-4 tw-py-2">В задачу</button>
+            </div>
+          </div>
+          <div class="tw-space-y-3">
+            <h3 class="tw-font-medium">Быстрый запуск шага</h3>
+            <input id="task" class="tw-border tw-rounded-xl tw-px-3 tw-py-2" placeholder="Например: «Сделай авторизацию»"/>
+            <button onclick="runStep()" class="tw-bg-indigo-600 tw-text-white tw-rounded-xl tw-px-4 tw-py-2">Запустить</button>
+            <div class="tw-text-xs tw-text-slate-500">Агент объяснит понятным языком, затем выполнит действия.</div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Задачи -->
+      <div id="tab-tasks" class="tab-panel tw-hidden">
+        <div class="tw-flex tw-gap-2 tw-mb-3">
+          <input id="task-title" class="tw-flex-1 tw-border tw-rounded-xl tw-px-3 tw-py-2" placeholder="Новая задача"/>
+          <button onclick="addTask()" class="tw-bg-slate-800 tw-text-white tw-rounded-xl tw-px-4 tw-py-2">Добавить</button>
+          <button onclick="loadTasks()" class="tw-bg-slate-700 tw-text-white tw-rounded-xl tw-px-4 tw-py-2">Обновить</button>
+        </div>
+        <div id="tasks" class="tw-space-y-2"></div>
+      </div>
+
+      <!-- Логи -->
+      <div id="tab-logs" class="tab-panel tw-hidden">
+        <div id="logs" class="tw-font-mono tw-text-xs tw-border tw-rounded-xl tw-bg-slate-50 tw-h-80 tw-overflow-auto tw-p-3"></div>
+      </div>
+
+      <!-- Расписание -->
+      <div id="tab-schedule" class="tab-panel tw-hidden">
+        <div class="tw-grid md:tw-grid-cols-3 tw-gap-4">
+          <div class="tw-space-y-2">
+            <h3 class="tw-font-medium">Окно работы</h3>
+            <input id="tw" class="tw-border tw-rounded-xl tw-px-3 tw-py-2" placeholder="Напр.: 23:00-07:00"/>
+            <input id="days" class="tw-border tw-rounded-xl tw-px-3 tw-py-2" placeholder="Mon,Tue,Wed,Thu,Fri,Sat,Sun"/>
+            <label class="tw-flex tw-items-center tw-gap-2"><input id="sched-en" type="checkbox" checked/> Включить расписание</label>
+            <button onclick="saveSchedule()" class="tw-bg-emerald-600 tw-text-white tw-rounded-xl tw-px-4 tw-py-2">Сохранить</button>
+            <p class="tw-text-xs tw-text-slate-500">Если время вышло — агент корректно завершит шаг и уснёт до разрешённого окна.</p>
+          </div>
+          <div class="tw-col-span-2 tw-text-sm tw-text-slate-700 tw-space-y-2">
+            <p><b>Зачем это нужно?</b> Чтобы не нагружать компьютер днём и использовать ночь для тяжёлых задач.</p>
+            <p><b>Что будет происходить?</b> Агент доведёт текущий шаг до конца и поставит выполнение на паузу. В нужное время продолжит.</p>
+          </div>
+        </div>
+      </div>
+    </section>
+  </div>
+
+<script>
+let currentPid = null;
+let es = null;
+let ws = null;
+
+document.querySelectorAll('.tab').forEach(btn=> btn.onclick = ()=>switchTab(btn.dataset.tab) );
+function switchTab(name){
+  document.querySelectorAll('.tab').forEach(b=>b.classList.remove('tw-border-slate-900','tw-text-slate-900'));
+  document.querySelector(`.tab[data-tab="${name}"]`).classList.add('tw-border-slate-900','tw-text-slate-900');
+  document.querySelectorAll('.tab-panel').forEach(p=>p.classList.add('tw-hidden'));
+  document.getElementById(`tab-${name}`).classList.remove('tw-hidden');
+}
+
+async function createProject(){
+  const body = {name: v('pname','my-project'), description: v('pdesc',''), tech_stack: v('pstack',''), repo_url: v('prepo', null)};
+  const res = await fetch('/projects', {method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify(body)});
+  const j = await res.json();
+  if(!j.ok){ alert('Ошибка создания проекта'); return; }
+  currentPid = j.project_id; byId('pid').textContent = currentPid;
+  connectStream(); connectWS(); loadTasks(); loadChatHistory();
+  toast('Проект создан'); switchTab('chat');
+}
+
+function connectStream(){
+  if(es) es.close();
+  es = new EventSource(`/stream/${currentPid}`);
+  es.addEventListener('log', e=>{
+    const d = JSON.parse(e.data);
+    appendLog(`${d.ts} [${d.type}] ${d.role}\n${d.content}\n`);
+    if(d.type==='commit') setStatus('idle');
+    if(d.type==='explain' && d.content.includes('приостановлено')) setStatus('sleeping');
+    if(d.type==='explain' && d.content.includes('продолжить')) setStatus('idle');
+  });
+}
+function connectWS(){
+  if(ws) ws.close();
+  ws = new WebSocket((location.protocol==='https:'?'wss':'ws') + '://' + location.host + `/ws/${currentPid}`);
+  ws.onmessage = (e)=>appendChat('assistant', e.data);
+}
+async function runStep(){
+  ensurePid();
+  const body = {task: v('task','Сформируй структуру проекта и README на русском')};
+  await fetch(`/projects/${currentPid}/run`, {method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify(body)});
+  setStatus('running');
+}
+async function sendChat(){
+  ensurePid();
+  const text = v('chat-input','');
+  if(!text) return;
+  appendChat('user', text);
+  ws?.send(text);
+  byId('chat-input').value='';
+}
+async function sendAsTask(){
+  ensurePid();
+  const text = v('chat-input','');
+  if(!text) return;
+  await fetch(`/projects/${currentPid}/tasks`, {method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify({title:text})});
+  appendChat('user', text + ' (добавлено в задачи)');
+  byId('chat-input').value='';
+  loadTasks();
+}
+async function loadChatHistory(){
+  ensurePid();
+  const res = await fetch(`/projects/${currentPid}/chat/history`);
+  const j = await res.json();
+  byId('chat-box').innerHTML='';
+  j.messages.forEach(m=>appendChat(m.role, m.content));
+}
+async function loadTasks(){
+  ensurePid();
+  const res = await fetch(`/projects/${currentPid}/tasks`);
+  const j = await res.json();
+  const box = byId('tasks'); box.innerHTML='';
+  j.tasks.forEach(t=>{
+    const row = document.createElement('div');
+    row.className = 'tw-flex tw-items-center tw-justify-between tw-border tw-rounded-xl tw-px-3 tw-py-2';
+    row.innerHTML = `<div><b>#${t.id}</b> ${escapeHtml(t.title)} <span class="tw-text-xs tw-text-slate-500">[${t.status}]</span></div>
+     <div class="tw-flex tw-gap-2">
+       <button class="tw-text-xs tw-bg-emerald-600 tw-text-white tw-rounded-lg tw-px-2 tw-py-1" onclick="setTaskStatus(${t.id}, 'in_progress')">В работу</button>
+       <button class="tw-text-xs tw-bg-slate-700 tw-text-white tw-rounded-lg tw-px-2 tw-py-1" onclick="setTaskStatus(${t.id}, 'done')">Готово</button>
+     </div>`;
+    box.appendChild(row);
+  });
+}
+async function setTaskStatus(id, status){
+  ensurePid();
+  await fetch(`/projects/${currentPid}/tasks/${id}`, {method:'PATCH', headers:{'Content-Type':'application/json'}, body: JSON.stringify({status})});
+  loadTasks();
+}
+async function saveSchedule(){
+  ensurePid();
+  const body = {time_window: v('tw','23:00-07:00'), days: v('days','Mon,Tue,Wed,Thu,Fri,Sat,Sun'), enabled: byId('sched-en').checked};
+  await fetch(`/projects/${currentPid}/schedule`, {method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify(body)});
+  toast('Расписание сохранено');
+}
+function setStatus(st){
+  const s = byId('status');
+  s.textContent = st;
+  s.className = 'tw-text-sm tw-rounded-full tw-px-3 tw-py-1 ' + (
+    st==='running' ? 'tw-bg-indigo-100 tw-text-indigo-700' :
+    st==='sleeping'? 'tw-bg-amber-100 tw-text-amber-700' :
+    st==='error'   ? 'tw-bg-rose-100 tw-text-rose-700' :
+                     'tw-bg-slate-200 tw-text-slate-700'
+  );
+}
+function appendLog(t){
+  const box = byId('logs'); const el = document.createElement('div'); el.textContent = t;
+  box.appendChild(el); box.scrollTop = box.scrollHeight;
+}
+function appendChat(role, text){
+  const box = byId('chat-box');
+  const wrap = document.createElement('div');
+  wrap.className = 'tw-flex tw-items-start tw-gap-2';
+  wrap.innerHTML = `<div class="tw-text-xs tw-uppercase tw-text-slate-500 tw-min-w-[70px]">${role}</div>
+                    <div class="tw-bg-slate-100 tw-rounded-xl tw-px-3 tw-py-2 tw-max-w-[80%]">${escapeHtml(text)}</div>`;
+  box.appendChild(wrap); box.scrollTop = box.scrollHeight;
+}
+function v(id, d){ const x = byId(id).value; return x===''?d:x; }
+function byId(id){ return document.getElementById(id); }
+function ensurePid(){ if(!currentPid){ alert('Сначала создайте проект'); throw new Error('no pid'); } }
+function toast(msg){
+  const el = document.createElement('div');
+  el.className = 'tw-fixed tw-bottom-5 tw-right-5 tw-bg-black tw-text-white tw-rounded-xl tw-px-4 tw-py-2 tw-shadow-lg tw-opacity-90';
+  el.textContent = msg; document.body.appendChild(el);
+  setTimeout(()=>el.remove(), 2500);
+}
+function escapeHtml(s){return s.replace(/[&<>'"]/g, c=>({'&':'&amp;','<':'&lt;','>':'&gt;',"'":'&#39;','"':'&quot;'}[c]));}
+</script>
+</body>
+</html>
